@@ -1,44 +1,74 @@
-# ___________________________ - номер успешной посылки
+# 105625664 - номер успешной посылки
+
+def get_first_command(cmd: str) -> str:
+    count_opn = 0
+    count_cls = 0
+    index_opn = 0
+    index_cls = 0
+    for i in range(len(cmd)):
+        if cmd[i] == "[":
+            if index_opn == 0:
+                index_opn = i + 1
+            count_opn += 1
+        elif cmd[i] == "]":
+            count_cls += 1
+            index_cls = i
+
+        if count_opn == count_cls and count_cls != 0:
+            return cmd[index_opn: index_cls]
+
+    raise Exception("corrupted command format")
 
 
-def encrypted_instructions(instructions: list) -> list:
+def parse_command(cmd: str) -> str:
     """
-    Функция расшифровывает сжатые сообщения и возвращает строку с командами.
-
+        Функция расшифровывает сжатые сообщения и возвращает строку с командами.
         Параметры:
-            instructions (list): строка. В строке могут быть только
-            буквы, числа и квадратные скобки.
-
+            cmd (str): строка. В строке могут быть буквы, числа и квадратные скобки.
         Возвращаемое значение:
-            decrypted_message (list): строка. Полная форма команды
+            result (str): строка без квадратных скобок
     """
 
-    # наилучшим решением будет использование стека и постоянное удаление
-    # элементов в нем, если скобки открывающаяся и закрывающаяся совпадают,
-    # то они очищаются из стека и так до тех пор, пока он не окажется пустым.
+    result: str = ""
+    i: int = 0
+    while i < len(cmd):
+        if cmd[i].isdigit():
+            multiplier = get_full_digit(cmd[i: len(cmd)])
+            inner_command = get_first_command(cmd[i: len(cmd)])
+            result += multiply_string(int(multiplier), inner_command)
+            i += len(inner_command) + len(multiplier) + 2
+        elif cmd[i] == "[":
+            inner_command = get_first_command(cmd[i: len(cmd)])
+            result += parse_command(inner_command)
+            i += len(inner_command) + 2
+        else:
+            result += cmd[i]
+            i += 1
+    return result
 
-    open_bracket = ['[']
-    close_bracket = [']']
-    #bracket = {']': '['}  # или словарь?
-    stack = []
 
-    i = 0  # индекс текущего символа
+def multiply_string(multiplier: int, cmd: str) -> str:
+    result: str = ""
+    cmd = parse_command(cmd)
+    for i in range(multiplier):
+        result += cmd
+    return result
 
-    # для каждого символа строки:
-    for i in instructions:
-        # проверить, является ли символ числом
-        num_list = [int(num) for num in filter(
-            lambda num: num.isnumeric(), instructions)]
-        if i+1 == open_bracket:
 
-        #if i.isnumeric():   #type(i) == int:
-            #pass #if j in open_bracket:
-             #   stack.append(i*j)
+def get_full_digit(cmd: str) -> str:
+    result = ""
+
+    for i in range(len(cmd)):
+        if cmd[i].isdigit():
+            result += cmd[i]
+        else:
+            break
+    return result
 
 
 def main():
-    instructions = [i for i in input().split()]  # преобразование строки в список
-    print(encrypted_instructions(instructions))
+    command = [i for i in input()]
+    print(parse_command(command))
 
 
 if __name__ == '__main__':
